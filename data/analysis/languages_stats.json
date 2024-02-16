@@ -1,0 +1,30 @@
+{
+    "3": {
+        "dutch": "ENR",
+        "english": "EAR",
+        "french": "ERA",
+        "german": "ENR",
+        "finnish": "AIT"
+    },
+    "5": {
+        "dutch": "ENROA",
+        "english": "EARON",
+        "french": "ERAIT",
+        "german": "ENRTS",
+        "finnish": "AITNE"
+    },
+    "10": {
+        "dutch": "ENROAITDLG",
+        "english": "EARONISTLD",
+        "french": "ERAITSNOUL",
+        "german": "ENRTSAIHLG",
+        "finnish": "AITNESLUKO"
+    },
+    "1": {
+        "dutch": "E",
+        "english": "E",
+        "french": "E",
+        "german": "E",
+        "finnish": "A"
+    }
+}

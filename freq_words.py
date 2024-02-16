@@ -12,17 +12,14 @@ def execute(dir_input, dir_output):
         raise ValueError(f"Illegal Argument! {dir_output} does not exist!")
 
     for book_title in [title for title in os.listdir(dir_input) if title.endswith('.txt')]:
-        book_path = os.path.join(dir_input, book_title)
         title = book_title.split(".")[0]
-        language = get_language(book_path)
 
-        with open(book_path, "r", encoding="utf8") as fp_input:
+        with open(os.path.join(dir_input, book_title), "r", encoding="utf8") as fp_input:
             text = fp_input.read()
 
         counter = get_words_frequency(text)
 
-        output_file = f"{language}_{title}.txt"
-        with open(os.path.join(dir_output, output_file), "w") as output_fp:
+        with open(os.path.join(dir_output, f"{title}.txt"), "w") as output_fp:
             for item in counter:
                 output_fp.write(f"{item[0]}: {item[1]}\n")
 

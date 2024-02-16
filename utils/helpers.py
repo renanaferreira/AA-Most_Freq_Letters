@@ -1,10 +1,9 @@
+import math
+import random
 import string
 import time
 from collections import Counter
-from statistics import mean as mean_function
-from math import floor
 
-import numpy as np
 from unidecode import unidecode
 
 from utils.constants.labels import EXEC_TIME, FREQ, APPROX_CNT, DS_CNT
@@ -26,7 +25,11 @@ class Solution:
 
 def exact_counter(stream) -> Solution:
     start = time.time()
-    counter = dict(Counter(stream))
+    counter = dict()
+    for char in stream:
+        if char not in counter:
+            counter[char] = 0
+        counter[char] += 1
     execution_time = time.time() - start
 
     return Solution(counter, execution_time)
@@ -40,8 +43,7 @@ def approximate_counter(stream) -> Solution:
             counter[char] = 0
 
         # Increment based on probability
-        probability = decreasing_probability(A, counter[char])
-        if np.random.uniform(0, 1) <= probability:
+        if random.uniform(0, 1) <= decreasing_probability(A, counter[char]):
             counter[char] += 1
 
     execution_time = time.time() - start
@@ -131,17 +133,11 @@ def get_words_frequency(text):
     return counter
 
 
-def analyse(exact_counter_solution, approx_counter_solution, data_stream_solution, k_list):
-    statistics = dict()
-
-    exact_counters = exact_counter_solution[FREQ]
-    approx_counters = [i[FREQ] for i in approx_counter_solution]
-
-    statistics[APPROX_CNT] = analyse_approximate_counter(exact_counters, approx_counters, k_list)
-    statistics[APPROX_CNT]["avg_exec_time"] = mean_function([i[EXEC_TIME] for i in approx_counter_solution])
-
-    statistics[DS_CNT] = analyse_data_stream_counter(exact_counter_solution, data_stream_solution)
-
+def analyse(exact_count, approx_count_list, data_stream_count, k_list):
+    statistics = {
+        DS_CNT: analyse_data_stream_counter(exact_count, data_stream_count),
+        APPROX_CNT: analyse_approximate_counter(exact_count, approx_count_list, k_list),
+    }
     return statistics
 
 
@@ -192,7 +188,7 @@ def analyse_approximate_counter(exact_solution, approx_solution, k_list):
     k_order_accuracy = {k: get_accuracy(exact_order[:k], k_most_frequent[k]) for k in k_list}
 
     # Average approximate counter
-    avg_approx_counter = {char: floor(mean_function(count)) for char, count in char_count.items()}
+    avg_approx_counter = {char: math.floor(get_mean(count)) for char, count in char_count.items()}
 
     # Expected approximate counter
     expected_approx_counter = {k: expected_value_by_decreasing_probability(2, v)
@@ -202,11 +198,31 @@ def analyse_approximate_counter(exact_solution, approx_solution, k_list):
     expected_n = sum(expected_approx_counter.values())
     real_n = sum(exact_solution.values())
 
-    real_variance, real_standard_deviation, \
-        mean_absolute_error, mean_relative_error, mean_accuracy_ratio, \
-        smallest_value, largest_value, \
-        mean, mean_absolute_deviation, standard_deviation, maximum_deviation, \
-        variance = calculate_errors(real_n, expected_n, approx_n_list)
+    # Real Variance
+    real_variance = expected_n / 2
+    # Real standard deviation
+    real_standard_deviation = math.sqrt(real_variance)
+    n = len(approx_n_list)
+    # Mean
+    mean = get_mean(approx_n_list)
+    # Maximum deviation
+    maximum_deviation = max([abs(total - mean) for total in approx_n_list])
+    # Mean absolute deviation
+    mean_absolute_deviation = sum([abs(total - mean) for total in approx_n_list]) / n
+    # Variance
+    variance = sum([(count - mean) ** 2 for count in approx_n_list]) / n
+    # Standard deviation (variance ** 0.5)
+    standard_deviation = math.sqrt(sum([(count - mean) ** 2 for count in approx_n_list]) / n)
+    # Mean absolute error
+    mean_absolute_error = sum([abs(count - real_n) for count in approx_n_list]) / n
+    # Mean relative error
+    mean_relative_error = sum([abs(count - real_n) / real_n * 100 for count in approx_n_list]) / n
+    # Mean get_accuracy ratio
+    mean_accuracy_ratio = mean / expected_n
+    # Smallest counter value
+    smallest_value = min(approx_n_list)
+    # Largest counter value
+    largest_value = max(approx_n_list)
 
     statistics = {
         "avg_approx_counter": avg_approx_counter,
@@ -223,23 +239,20 @@ def analyse_approximate_counter(exact_solution, approx_solution, k_list):
 
 def analyse_data_stream_counter(exact_solution, ds_solution):
     # Real order
-    exact_ordered_counter = sorted([(k, v) for k, v in exact_solution[FREQ].items()], key=lambda x: (-x[1], x[0]))
-    exact_order = "".join([i[0] for i in exact_ordered_counter])
+    exact_order = get_order(exact_solution)
 
     statistics = dict()
 
     for k in ds_solution:
-        cur_ordered_counter = sorted([(k, v) for k, v in ds_solution[k][FREQ].items()], key=lambda x: (-x[1], x[0]))
-        cur_order = "".join([i[0] for i in cur_ordered_counter])
+        cur_order = get_order(ds_solution[k])
 
-        real_k = len(ds_solution[k][FREQ])
-        k_exact_order = exact_order[:real_k]
+        k_exact_order = exact_order[:len(ds_solution[k])]
 
-        accurate_chars = [char for char in k_exact_order if char in cur_order]
-        _accuracy = len(accurate_chars) / real_k if real_k != 0 else 0
+        accurate_chars = [char for char in cur_order if char in k_exact_order]
+        accuracy = round(len(accurate_chars) / (int(k) - 1), 4)
 
         statistics[k] = {
-            "order": cur_order, "accurate_chars": accurate_chars, "get_accuracy": _accuracy
+            "order": cur_order, "accurate_chars": accurate_chars, "accuracy": accuracy
         }
     return statistics
 
@@ -248,64 +261,42 @@ def get_accuracy(x, dictionary):
     return dictionary[x] / sum(dictionary.values()) if x in dictionary else 0
 
 
-def calculate_errors(real_n, expected_n, approx_n_list):
-    # Real Variance
-    real_variance = expected_n / 2
+def get_order(counter: dict):
+    ordered_counter = sorted([(k, v) for k, v in counter.items()], key=lambda x: (-x[1], x[0]))
+    order = "".join([i[0] for i in ordered_counter])
+    return order
 
-    # Real standard deviation
-    real_standard_deviation = np.sqrt(real_variance)
 
-    # -----------------------------
+def analyse_text_in_different_languages(exact_counter_list, k_list):
+    if 1 not in k_list:
+        k_list = [1] + k_list
+    exact_order_list = {k: get_order(v) for k, v in exact_counter_list.items()}
 
-    n = len(approx_n_list)
-    mean = mean_function(approx_n_list)
-
-    # Maximum deviation
-    maximum_deviation = max([abs(total - mean) for total in approx_n_list])
-
-    # Mean absolute deviation
-    mean_absolute_deviation = sum([abs(total - mean) for total in approx_n_list]) / n
-
-    # Variance
-    variance = sum([(count - mean) ** 2 for count in approx_n_list]) / n
-
-    # Standard deviation (variance ** 0.5)
-    standard_deviation = np.sqrt(sum([(count - mean) ** 2 for count in approx_n_list]) / n)
-
-    # Mean absolute error
-    mean_absolute_error = sum([abs(count - real_n) for count in approx_n_list]) / n
-
-    # Mean relative error
-    mean_relative_error = sum([abs(count - real_n) / real_n * 100 for count in approx_n_list]) / n
-
-    # Mean get_accuracy ratio
-    mean_accuracy_ratio = mean / expected_n
-
-    # -----------------------------
-
-    # Smallest counter value
-    smallest_value = min(approx_n_list)
-
-    # Largest counter value
-    largest_value = max(approx_n_list)
-
-    return real_variance, real_standard_deviation, mean_absolute_error, mean_relative_error, mean_accuracy_ratio, \
-        smallest_value, largest_value, mean, mean_absolute_deviation, standard_deviation, maximum_deviation, variance
+    k_most_frequent = {k: dict() for k in k_list}
+    for k in k_list:
+        for title in exact_order_list:
+            k_most_frequent[k][title] = exact_order_list[title][:k]
+    return k_most_frequent
 
 
 def decreasing_probability(a, k):
-    return 1 / (np.array([a]) ** k)
+    return 1 / (a ** k)
 
 
 def expected_value_by_decreasing_probability(a, k):
-    return np.floor(np.log(k * (a - 1) + a - 1) / np.log(a))
+    return math.floor(math.log(k * (a - 1) + a - 1) / math.log(a))
 
 
 def experiment_approximate_counter(stream, n_trials):
     approx_solutions = [approximate_counter(stream) for _ in range(n_trials)]
-    return {EXEC_TIME: mean_function([i.execution_time for i in approx_solutions]),
+    return {EXEC_TIME: get_mean([i.execution_time for i in approx_solutions]),
             FREQ: [i.counter for i in approx_solutions]}
 
 
 def experiment_data_stream_counter(stream, k_list):
     return {k: data_stream_counter(stream, k).to_json() for k in k_list}
+
+
+def get_mean(lst: list):
+    from statistics import mean
+    return mean(lst)

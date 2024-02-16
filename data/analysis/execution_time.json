@@ -1,0 +1,52 @@
+{
+    "finnish": {
+        "exact_counter": 0.0192,
+        "approximate_counter": 0.1448,
+        "data_stream_counter": {
+            "3": 0.0583,
+            "5": 0.056,
+            "10": 0.0709,
+            "avg": 0.0617
+        }
+    },
+    "dutch": {
+        "exact_counter": 0.0159,
+        "approximate_counter": 0.0996,
+        "data_stream_counter": {
+            "3": 0.0464,
+            "5": 0.0393,
+            "10": 0.0388,
+            "avg": 0.0415
+        }
+    },
+    "english": {
+        "exact_counter": 0.0165,
+        "approximate_counter": 0.1132,
+        "data_stream_counter": {
+            "3": 0.0538,
+            "5": 0.0508,
+            "10": 0.0464,
+            "avg": 0.0503
+        }
+    },
+    "german": {
+        "exact_counter": 0.0189,
+        "approximate_counter": 0.1222,
+        "data_stream_counter": {
+            "3": 0.0547,
+            "5": 0.0536,
+            "10": 0.0533,
+            "avg": 0.0539
+        }
+    },
+    "french": {
+        "exact_counter": 0.0257,
+        "approximate_counter": 0.1206,
+        "data_stream_counter": {
+            "3": 0.0605,
+            "5": 0.0561,
+            "10": 0.0549,
+            "avg": 0.0571
+        }
+    }
+}

@@ -1,1 +1,27 @@
-{"le_portrait_de_dorian_gray": {"language": "french", "initial_size": 481228, "final_size": 273087}, "dorian_grayn_muotokuva": {"language": "finnish", "initial_size": 479072, "final_size": 307532}, "das_bildnis_des_dorian_gray": {"language": "german", "initial_size": 514006, "final_size": 263792}, "the_picture_of_dorian_gray": {"language": "english", "initial_size": 448599, "final_size": 218796}, "het_portret_van_dorian_gray": {"language": "dutch", "initial_size": 395210, "final_size": 195069}}
+{
+    "finnish": {
+        "initial_size": 479072,
+        "final_size": 307532,
+        "variation_rate": 64.19
+    },
+    "dutch": {
+        "initial_size": 395210,
+        "final_size": 195069,
+        "variation_rate": 49.36
+    },
+    "english": {
+        "initial_size": 448599,
+        "final_size": 218796,
+        "variation_rate": 48.77
+    },
+    "german": {
+        "initial_size": 514006,
+        "final_size": 263792,
+        "variation_rate": 51.32
+    },
+    "french": {
+        "initial_size": 481228,
+        "final_size": 273087,
+        "variation_rate": 56.75
+    }
+}
